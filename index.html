@@ -176,7 +176,7 @@
 
       .prompt-box {
         position: sticky;
-        bottom: 12px;
+        bottom: 0;
         z-index: 5;
         background: linear-gradient(135deg, rgba(109,94,247,0.08), rgba(52,209,191,0.08));
         border: 1px solid rgba(109,94,247,0.12);
@@ -562,7 +562,7 @@
         }
 
         if (agentName === 'School Matchmaker') {
-          return `School Matchmaker: For a student interested in ${cleanMessage}, look at strong Vancouver schools such as Vancouver College, Point Grey Secondary, Prince of Wales, Eric Hamber, Lord Byng, and Killarney. Compare programs, school culture, academic strengths, and the official school website. Keep the choice realistic and make sure the school matches the student’s interests. Check the school websites for exact program details, admissions info, and reputation updates. `;
+          return `School Matchmaker: For a student interested in ${cleanMessage}, I recommend Vancouver schools such as Vancouver College (https://www.vancollege.ca), Point Grey Secondary (https://pointgrey.vsb.bc.ca), Prince of Wales Secondary (https://pw.vsb.bc.ca), Eric Hamber Secondary (https://erichamber.vsb.bc.ca), Lord Byng Secondary (https://lordbyng.vsb.bc.ca), and Killarney Secondary (https://killarney.vsb.bc.ca). Compare programs, school culture, academic strengths, and reputation. These schools in Vancouver, Canada offer different strengths, so match the school to the student’s interests, grades, and goals. Check the official school websites for current programs, admissions details, and updates. `;
         }
 
         return `Extracurricular Agent: Based on ${cleanMessage}, focus on clubs and activities that fit the student’s interests and energy. Good choices could include sports, art, robotics, debate, music, drama, coding clubs, and volunteering. Try to join a few activities that let the student grow, make friends, and show strengths outside class. Keep the suggestions age-appropriate and make sure the activities match the student’s goals. ${previous}`;
