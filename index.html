@@ -618,25 +618,47 @@
         return `Extracurricular Agent: Based on ${cleanMessage}, focus on clubs and activities that fit the student’s interests and energy. Good choices could include sports, art, robotics, debate, music, drama, coding clubs, and volunteering. Try to join a few activities that let the student grow, make friends, and show strengths outside class. Keep the suggestions age-appropriate and make sure the activities match the student’s goals. ${previous}`;
       }
 
-      async function runSingleAgent(agentKey, userMessage, previousContext) {
-        const agent = AGENTS[agentKey];
-        const basePrompt = `You are the ${agent.label}. Keep content suitable for ages 1 to 13, friendly, encouraging, and strict. Do not help with exact interview answers or application wording. The student should write their own ideas. Only help with grammar and fluency. User message: ${userMessage}. Context: ${previousContext || 'No prior output yet.'}`;
-
-        const proxyReply = await callProxy(basePrompt);
-        const schoolInfo = [
-          { name: 'Vancouver College', url: 'https://www.vancollege.ca' },
-          { name: 'Point Grey Secondary', url: 'https://pointgrey.vsb.bc.ca' },
-          { name: 'Prince of Wales Secondary', url: 'https://pw.vsb.bc.ca' },
-          { name: 'Eric Hamber Secondary', url: 'https://erichamber.vsb.bc.ca' },
-          { name: 'Lord Byng Secondary', url: 'https://lordbyng.vsb.bc.ca' },
-          { name: 'Killarney Secondary', url: 'https://killarney.vsb.bc.ca' },
-          { name: 'John Oliver Secondary', url: 'https://johnoliver.vsb.bc.ca' },
-          { name: 'David Thompson Secondary', url: 'https://davidthompson.vsb.bc.ca' },
-          { name: 'Churchill Secondary', url: 'https://churchill.vsb.bc.ca' }
+      function getSchoolListForPrompt(prompt) {
+        const text = prompt.toLowerCase();
+        const allSchools = [
+          { name: 'Vancouver College', url: 'https://www.vancollege.ca', tags: ['stem', 'math', 'science', 'academic', 'strong', 'program'] },
+          { name: 'Point Grey Secondary', url: 'https://pointgrey.vsb.bc.ca', tags: ['arts', 'music', 'dance', 'creative', 'balanced', 'strong'] },
+          { name: 'Prince of Wales Secondary', url: 'https://pw.vsb.bc.ca', tags: ['sports', 'balanced', 'academic', 'community', 'clubs'] },
+          { name: 'Eric Hamber Secondary', url: 'https://erichamber.vsb.bc.ca', tags: ['stem', 'science', 'math', 'technology', 'strong'] },
+          { name: 'Lord Byng Secondary', url: 'https://lordbyng.vsb.bc.ca', tags: ['arts', 'music', 'academic', 'balanced', 'community'] },
+          { name: 'Killarney Secondary', url: 'https://killarney.vsb.bc.ca', tags: ['sports', 'clubs', 'athletic', 'music', 'community'] },
+          { name: 'John Oliver Secondary', url: 'https://johnoliver.vsb.bc.ca', tags: ['sports', 'arts', 'balanced', 'community', 'clubs'] },
+          { name: 'David Thompson Secondary', url: 'https://davidthompson.vsb.bc.ca', tags: ['academic', 'balanced', 'program', 'strong'] },
+          { name: 'Churchill Secondary', url: 'https://churchill.vsb.bc.ca', tags: ['arts', 'sports', 'community', 'academic', 'strong'] }
         ];
 
+        const matches = allSchools.filter(school => {
+          const schoolTags = school.tags.join(' ');
+          const keywords = [
+            /science|stem|math|technology|coding|robot|programming/.test(text) ? 'stem' : '',
+            /art|music|dance|drama|creative|design/.test(text) ? 'arts' : '',
+            /sport|soccer|football|basketball|athletic|club/.test(text) ? 'sports' : '',
+            /academic|strong|program|reputation|ranking/.test(text) ? 'academic' : ''
+          ].filter(Boolean);
+
+          if (!keywords.length) return true;
+          return keywords.some(keyword => schoolTags.includes(keyword));
+        });
+
+        const unique = matches.length ? matches : allSchools;
+        return unique.slice(0, 3);
+      }
+
+      async function runSingleAgent(agentKey, userMessage, previousContext) {
+        const agent = AGENTS[agentKey];
+        const safePrompt = sanitizeUserInput(userMessage);
+        const basePrompt = `You are the ${agent.label}. Keep content suitable for ages 1 to 13, friendly, encouraging, and strict. Do not help with exact interview answers or application wording. The student should write their own ideas. Only help with grammar and fluency. User message: ${safePrompt}. Context: ${previousContext || 'No prior output yet.'}`;
+
+        const proxyReply = await callProxy(basePrompt);
+        const schoolInfo = getSchoolListForPrompt(safePrompt);
+
         if (agentKey === 'school') {
-          const base = proxyReply || buildFallback(agent.label, userMessage, previousContext);
+          const base = proxyReply || buildFallback(agent.label, safePrompt, previousContext);
           const listHtml = schoolInfo.map(school =>
             `<li><a href="${school.url}" target="_blank" rel="noreferrer">${school.name}</a></li>`
           ).join('');
@@ -650,7 +672,7 @@
           return { text: proxyReply };
         }
 
-        return { text: buildFallback(agent.label, userMessage, previousContext) };
+        return { text: buildFallback(agent.label, safePrompt, previousContext) };
       }
 
       function renderInterviewChatCard(result) {
@@ -866,6 +888,16 @@
         }
       }
 
+      function containsProfanity(text) {
+        const badWords = ['damn', 'hell', 'crap', 'stupid', 'idiot', 'hate', 'trash', 'swear'];
+        const lower = String(text).toLowerCase();
+        return badWords.some(word => lower.includes(word));
+      }
+
+      function sanitizeUserInput(text) {
+        return String(text).replace(/\s+/g, ' ').trim();
+      }
+
       function chooseAgentsForPrompt(prompt) {
         const text = prompt.toLowerCase();
         const scores = {
@@ -899,9 +931,16 @@
       }
 
       async function orchestrateAgents() {
-        const userMessage = userInput.value.trim();
+        const rawUserMessage = userInput.value;
+        const userMessage = sanitizeUserInput(rawUserMessage);
         if (!userMessage) {
           setTrace(['Please type a message before running the agents.']);
+          renderInitialCards();
+          return;
+        }
+
+        if (containsProfanity(userMessage)) {
+          setTrace(['Please use respectful language. Keep the message school-appropriate.']);
           renderInitialCards();
           return;
         }
