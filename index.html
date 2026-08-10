@@ -562,7 +562,7 @@
         }
 
         if (agentName === 'School Matchmaker') {
-          return `School Matchmaker: For a student interested in ${cleanMessage}, here are Vancouver, BC, Canada high schools only: Vancouver College (https://www.vancollege.ca), Point Grey Secondary (https://pointgrey.vsb.bc.ca), Prince of Wales Secondary (https://pw.vsb.bc.ca), Eric Hamber Secondary (https://erichamber.vsb.bc.ca), Lord Byng Secondary (https://lordbyng.vsb.bc.ca), Killarney Secondary (https://killarney.vsb.bc.ca), John Oliver Secondary (https://johnoliver.vsb.bc.ca), David Thompson Secondary (https://davidthompson.vsb.bc.ca), and Churchill Secondary (https://churchill.vsb.bc.ca). Compare each school’s programs, culture, academic strengths, and reputation. These are all high schools in Vancouver, BC, Canada, and the best match depends on the student’s interests, grades, and goals. Check the official school websites for current programs, admissions details, and updates.`;
+          return `School Matchmaker: For a student interested in ${cleanMessage}, here are Vancouver, BC, Canada high schools only: Vancouver College (https://www.vancollege.ca), Point Grey Secondary (https://pointgrey.vsb.bc.ca), Prince of Wales Secondary (https://pw.vsb.bc.ca), Eric Hamber Secondary (https://erichamber.vsb.bc.ca), Lord Byng Secondary (https://lordbyng.vsb.bc.ca), Killarney Secondary (https://killarney.vsb.bc.ca), John Oliver Secondary (https://johnoliver.vsb.bc.ca), David Thompson Secondary (https://davidthompson.vsb.bc.ca), and Churchill Secondary (https://churchill.vsb.bc.ca). These are all high schools in Vancouver, BC, Canada. Compare each school’s programs, culture, academic strengths, and reputation. The best match depends on the student’s interests, grades, and goals. Check the official school websites for current programs, admissions details, and updates.`;
         }
 
         return `Extracurricular Agent: Based on ${cleanMessage}, focus on clubs and activities that fit the student’s interests and energy. Good choices could include sports, art, robotics, debate, music, drama, coding clubs, and volunteering. Try to join a few activities that let the student grow, make friends, and show strengths outside class. Keep the suggestions age-appropriate and make sure the activities match the student’s goals. ${previous}`;
@@ -573,6 +573,12 @@
         const basePrompt = `You are the ${agent.label}. Keep content suitable for ages 1 to 13, friendly, encouraging, and strict. Do not help with exact interview answers or application wording. The student should write their own ideas. Only help with grammar and fluency. User message: ${userMessage}. Context: ${previousContext || 'No prior output yet.'}`;
 
         const proxyReply = await callProxy(basePrompt);
+        const schoolList = `Recommended Vancouver, BC, Canada high schools: Vancouver College (https://www.vancollege.ca), Point Grey Secondary (https://pointgrey.vsb.bc.ca), Prince of Wales Secondary (https://pw.vsb.bc.ca), Eric Hamber Secondary (https://erichamber.vsb.bc.ca), Lord Byng Secondary (https://lordbyng.vsb.bc.ca), Killarney Secondary (https://killarney.vsb.bc.ca), John Oliver Secondary (https://johnoliver.vsb.bc.ca), David Thompson Secondary (https://davidthompson.vsb.bc.ca), and Churchill Secondary (https://churchill.vsb.bc.ca).`;
+
+        if (agentKey === 'school') {
+          return `${proxyReply || buildFallback(agent.label, userMessage, previousContext)}\n\n${schoolList}`;
+        }
+
         if (proxyReply) {
           return proxyReply;
         }
