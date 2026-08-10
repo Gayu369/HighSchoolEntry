@@ -592,18 +592,6 @@
         }
 
         if (agentName === 'School Matchmaker') {
-          const schoolList = [
-            'Vancouver College (https://www.vancollege.ca)',
-            'Point Grey Secondary (https://pointgrey.vsb.bc.ca)',
-            'Prince of Wales Secondary (https://pw.vsb.bc.ca)',
-            'Eric Hamber Secondary (https://erichamber.vsb.bc.ca)',
-            'Lord Byng Secondary (https://lordbyng.vsb.bc.ca)',
-            'Killarney Secondary (https://killarney.vsb.bc.ca)',
-            'John Oliver Secondary (https://johnoliver.vsb.bc.ca)',
-            'David Thompson Secondary (https://davidthompson.vsb.bc.ca)',
-            'Churchill Secondary (https://churchill.vsb.bc.ca)'
-          ];
-
           const tailored = /science|math|technology|stem|robot|coding|programming/.test(cleanMessage.toLowerCase())
             ? 'Because the prompt mentions science or STEM, I would especially look at Vancouver College, Point Grey Secondary, and Eric Hamber Secondary.'
             : /art|music|drama|dance|creative/.test(cleanMessage.toLowerCase())
@@ -612,7 +600,7 @@
                 ? 'Because the prompt mentions sports, I would especially look at Killarney Secondary, Churchill Secondary, and John Oliver Secondary.'
                 : 'These Vancouver high schools are strong choices to compare.';
 
-          return `School Matchmaker: For a student interested in ${cleanMessage}, these Vancouver, BC, Canada high schools are good options: ${schoolList.join(', ')}. ${tailored} Compare each school’s programs, culture, academic strengths, and reputation. Check each school’s official website for the current programs and admissions details.`;
+          return `School Matchmaker: For a student interested in ${cleanMessage}, ${tailored} Compare each school’s programs, culture, academic strengths, and reputation. The final choice should match the student’s interests, grades, and goals.`;
         }
 
         return `Extracurricular Agent: Based on ${cleanMessage}, focus on clubs and activities that fit the student’s interests and energy. Good choices could include sports, art, robotics, debate, music, drama, coding clubs, and volunteering. Try to join a few activities that let the student grow, make friends, and show strengths outside class. Keep the suggestions age-appropriate and make sure the activities match the student’s goals. ${previous}`;
@@ -663,7 +651,7 @@
             `<li><a href="${school.url}" target="_blank" rel="noreferrer">${school.name}</a></li>`
           ).join('');
           return {
-            text: `${base}\n\nRecommended Vancouver, BC, Canada high schools:`,
+            text: `${base}`,
             schools: listHtml,
             schoolLinksOnly: true
           };
