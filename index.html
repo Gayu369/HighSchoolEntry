@@ -312,8 +312,30 @@
         white-space: pre-wrap;
       }
 
+      .school-groups {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 12px;
+      }
+
+      .school-group {
+        background: rgba(245,247,255,0.8);
+        border: 1px solid rgba(109,94,247,0.1);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+
+      .school-group h4 {
+        margin: 0 0 8px;
+        font-size: 0.9rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
       .school-list {
-        margin: 10px 0 0;
+        margin: 0;
         padding-left: 18px;
         color: var(--ink);
       }
@@ -608,48 +630,93 @@
 
       function getSchoolListForPrompt(prompt) {
         const text = prompt.toLowerCase();
-        const allSchools = [
-          { name: 'Vancouver College', url: 'https://www.vancollege.ca', tags: ['stem', 'math', 'science', 'academic', 'strong', 'program'] },
-          { name: 'Point Grey Secondary', url: 'https://pointgrey.vsb.bc.ca', tags: ['arts', 'music', 'dance', 'creative', 'balanced', 'strong'] },
-          { name: 'Prince of Wales Secondary', url: 'https://pw.vsb.bc.ca', tags: ['sports', 'balanced', 'academic', 'community', 'clubs'] },
-          { name: 'Eric Hamber Secondary', url: 'https://erichamber.vsb.bc.ca', tags: ['stem', 'science', 'math', 'technology', 'strong'] },
-          { name: 'Lord Byng Secondary', url: 'https://lordbyng.vsb.bc.ca', tags: ['arts', 'music', 'academic', 'balanced', 'community'] },
-          { name: 'Killarney Secondary', url: 'https://killarney.vsb.bc.ca', tags: ['sports', 'clubs', 'athletic', 'music', 'community'] },
-          { name: 'John Oliver Secondary', url: 'https://johnoliver.vsb.bc.ca', tags: ['sports', 'arts', 'balanced', 'community', 'clubs'] },
-          { name: 'David Thompson Secondary', url: 'https://davidthompson.vsb.bc.ca', tags: ['academic', 'balanced', 'program', 'strong'] },
-          { name: 'Churchill Secondary', url: 'https://churchill.vsb.bc.ca', tags: ['arts', 'sports', 'community', 'academic', 'strong'] }
+        const publicSchools = [
+          { name: 'Britannia Secondary', url: 'https://britannia.vsb.bc.ca/', tags: ['arts', 'music', 'academic', 'balanced', 'community'] },
+          { name: 'Churchill Secondary', url: 'https://churchill.vsb.bc.ca/', tags: ['arts', 'sports', 'community', 'academic', 'strong'] },
+          { name: 'David Thompson Secondary', url: 'https://davidthompson.vsb.bc.ca/', tags: ['academic', 'balanced', 'program', 'strong'] },
+          { name: 'Eric Hamber Secondary', url: 'https://erichamber.vsb.bc.ca/', tags: ['stem', 'science', 'math', 'technology', 'strong'] },
+          { name: 'Gladstone Secondary', url: 'https://gladstone.vsb.bc.ca/', tags: ['academic', 'balanced', 'community', 'strong'] },
+          { name: 'John Oliver Secondary', url: 'https://johnoliver.vsb.bc.ca/', tags: ['sports', 'arts', 'balanced', 'community', 'clubs'] },
+          { name: 'Killarney Secondary', url: 'https://killarney.vsb.bc.ca/', tags: ['sports', 'clubs', 'athletic', 'music', 'community'] },
+          { name: 'King George Secondary', url: 'https://kinggeorge.vsb.bc.ca/', tags: ['sports', 'academic', 'balanced', 'community'] },
+          { name: 'Lord Byng Secondary', url: 'https://lordbyng.vsb.bc.ca/', tags: ['arts', 'music', 'academic', 'balanced', 'community'] },
+          { name: 'Magee Secondary', url: 'https://magee.vsb.bc.ca/', tags: ['sports', 'academic', 'strong', 'community'] },
+          { name: 'McMath Secondary', url: 'https://mcmath.vsb.bc.ca/', tags: ['science', 'math', 'technology', 'academic', 'strong'] },
+          { name: 'Point Grey Secondary', url: 'https://pointgrey.vsb.bc.ca/', tags: ['arts', 'music', 'dance', 'creative', 'balanced', 'strong'] },
+          { name: 'Prince of Wales Secondary', url: 'https://pw.vsb.bc.ca/', tags: ['sports', 'balanced', 'academic', 'community', 'clubs'] },
+          { name: 'Tupper Secondary', url: 'https://tupper.vsb.bc.ca/', tags: ['academic', 'arts', 'balanced', 'community'] },
+          { name: 'Vancouver School of Arts and Academics (VSA)', url: 'https://vsab.vsb.bc.ca/', tags: ['arts', 'music', 'creative', 'academic', 'strong'] },
+          { name: 'Vancouver Technical Secondary', url: 'https://vancouvertechnical.vsb.bc.ca/', tags: ['stem', 'science', 'math', 'technology', 'academic'] },
+          { name: 'Windermere Secondary', url: 'https://windermere.vsb.bc.ca/', tags: ['sports', 'academic', 'balanced', 'community'] },
+          { name: 'Vancouver Learning Network', url: 'https://vln.vsb.bc.ca/', tags: ['academic', 'balanced', 'flexible', 'community'] }
         ];
 
-        const matches = allSchools.filter(school => {
-          const schoolTags = school.tags.join(' ');
-          const keywords = [
-            /science|stem|math|technology|coding|robot|programming/.test(text) ? 'stem' : '',
-            /art|music|dance|drama|creative|design/.test(text) ? 'arts' : '',
-            /sport|soccer|football|basketball|athletic|club/.test(text) ? 'sports' : '',
-            /academic|strong|program|reputation|ranking/.test(text) ? 'academic' : ''
-          ].filter(Boolean);
+        const privateSchools = [
+          { name: 'Vancouver College', url: 'https://www.vancollege.ca/', tags: ['stem', 'math', 'science', 'academic', 'strong', 'program'] },
+          { name: 'St. George\'s School', url: 'https://www.stgeorges.bc.ca/', tags: ['sports', 'arts', 'academic', 'strong', 'community'] },
+          { name: 'Crofton House', url: 'https://www.croftonhouse.ca/', tags: ['arts', 'music', 'academic', 'strong', 'community'] },
+          { name: 'York House School', url: 'https://www.yorkhouse.ca/', tags: ['arts', 'academic', 'strong', 'community'] },
+          { name: 'Little Flower Academy', url: 'https://littlefloweracademy.ca/', tags: ['arts', 'academic', 'strong', 'community'] },
+          { name: 'King David High School', url: 'https://www.kingdavid.ca/', tags: ['academic', 'community', 'strong'] },
+          { name: 'Stratford Hall', url: 'https://www.stratfordhall.bc.ca/', tags: ['arts', 'academic', 'strong', 'community'] }
+        ];
 
-          if (!keywords.length) return true;
-          return keywords.some(keyword => schoolTags.includes(keyword));
+        const allSchools = [...publicSchools, ...privateSchools];
+        const categoryRules = [
+          { key: 'stem', pattern: /science|stem|math|technology|coding|robot|programming|engineering|research/ },
+          { key: 'arts', pattern: /art|music|dance|drama|creative|design|theatre|film/ },
+          { key: 'sports', pattern: /sport|soccer|football|basketball|athletic|track|swim|volleyball|hockey|club/ },
+          { key: 'academic', pattern: /academic|strong|program|reputation|ranking|rigorous|honors|ib/i }
+        ];
+
+        const scoredSchools = allSchools.map(school => {
+          const baseScore = categoryRules.reduce((score, rule) => score + (rule.pattern.test(text) && school.tags.includes(rule.key) ? 2 : 0), 0);
+          const exactNameHit = school.name.toLowerCase().includes(text) ? 1 : 0;
+          return { school, score: baseScore + exactNameHit };
         });
 
-        const unique = matches.length ? matches : allSchools;
-        return unique.slice(0, 3);
+        const relevant = scoredSchools.filter(entry => entry.score > 0).sort((a, b) => b.score - a.score || a.school.name.localeCompare(b.school.name));
+        const selected = relevant.length ? relevant.slice(0, 6).map(entry => entry.school) : [
+          publicSchools.find(school => school.name === 'Point Grey Secondary') || publicSchools[0],
+          publicSchools.find(school => school.name === 'Eric Hamber Secondary') || publicSchools[1],
+          privateSchools.find(school => school.name === 'Vancouver College') || privateSchools[0],
+          publicSchools.find(school => school.name === 'Churchill Secondary') || publicSchools[2]
+        ];
+
+        const publicSelected = selected.filter(school => publicSchools.some(item => item.name === school.name));
+        const privateSelected = selected.filter(school => privateSchools.some(item => item.name === school.name));
+
+        return {
+          public: publicSelected.length ? publicSelected.slice(0, 4) : [],
+          private: privateSelected.length ? privateSelected.slice(0, 4) : []
+        };
       }
 
       async function runSingleAgent(agentKey, userMessage, previousContext) {
         const agent = AGENTS[agentKey];
         const safePrompt = sanitizeUserInput(userMessage);
-        const basePrompt = `You are the ${agent.label}. Keep content suitable for ages 1 to 13, friendly, encouraging, and strict. Do not help with exact interview answers or application wording. The student should write their own ideas. Only help with grammar and fluency. User message: ${safePrompt}. Context: ${previousContext || 'No prior output yet.'}`;
+        const appDraftGuard = looksLikeApplicationDraftRequest(safePrompt)
+          ? 'This is an application-writing request. Refuse and redirect the student to school planning, interview prep, and grammar-only help instead.'
+          : 'This is a general school-planning question. Do not write a personal statement, application essay, application draft, or exact application wording. Keep the response to school matching, interview practice, grammar help, and friendly planning advice only.';
+        const basePrompt = `You are the ${agent.label}. Keep content suitable for ages 1 to 13, friendly, encouraging, and strict. ${appDraftGuard} The student should write their own ideas. Only help with grammar and fluency, school matching, and interview strategy. User message: ${safePrompt}. Context: ${previousContext || 'No prior output yet.'}`;
 
         const proxyReply = await callProxy(basePrompt);
         const schoolInfo = getSchoolListForPrompt(safePrompt);
 
         if (agentKey === 'school') {
           const base = proxyReply || buildFallback(agent.label, safePrompt, previousContext);
-          const listHtml = schoolInfo.map(school =>
-            `<li><a href="${school.url}" target="_blank" rel="noreferrer">${school.name}</a></li>`
-          ).join('');
+          const listHtml = `
+            <div class="school-groups">
+              <div class="school-group">
+                <h4>Public schools</h4>
+                <ul class="school-list">${schoolInfo.public.map(school => `<li><a href="${school.url}" target="_blank" rel="noreferrer">${school.name}</a></li>`).join('')}</ul>
+              </div>
+              <div class="school-group">
+                <h4>Private schools</h4>
+                <ul class="school-list">${schoolInfo.private.map(school => `<li><a href="${school.url}" target="_blank" rel="noreferrer">${school.name}</a></li>`).join('')}</ul>
+              </div>
+            </div>
+          `;
           return {
             text: `${base}`,
             schools: listHtml,
@@ -887,6 +954,26 @@
         return String(text).replace(/\s+/g, ' ').trim();
       }
 
+      function looksLikeApplicationDraftRequest(text) {
+        const lower = String(text || '').toLowerCase();
+        const explicitDraftSignals = [
+          'application essay',
+          'personal statement',
+          'application draft',
+          'college application',
+          'school application',
+          'write my application',
+          'draft my essay',
+          'write a personal statement',
+          'admissions essay',
+          'applications essay'
+        ];
+
+        const hasApplicationSignal = explicitDraftSignals.some(signal => lower.includes(signal));
+        const hasWritingSignal = /(write|draft|compose|create|help me write|help with writing)/.test(lower);
+        return hasApplicationSignal && hasWritingSignal;
+      }
+
       function chooseAgentsForPrompt(prompt) {
         const text = prompt.toLowerCase();
         const scores = {
@@ -934,6 +1021,12 @@
           return;
         }
 
+        if (looksLikeApplicationDraftRequest(userMessage)) {
+          setTrace(['I can help with school planning, grammar, and interview prep — not with drafting a school application or personal statement.']);
+          renderInitialCards();
+          return;
+        }
+
         userInput.value = '';
 
         const selectedAgents = chooseAgentsForPrompt(userMessage);
@@ -972,10 +1065,10 @@
           message.appendChild(body);
 
           if (item.key === 'school' && typeof result !== 'string' && result.schools) {
-            const list = document.createElement('ul');
-            list.className = 'school-list';
-            list.innerHTML = result.schools;
-            message.appendChild(list);
+            const listWrapper = document.createElement('div');
+            listWrapper.className = 'school-groups';
+            listWrapper.innerHTML = result.schools;
+            message.appendChild(listWrapper);
           }
 
           thread.appendChild(message);
