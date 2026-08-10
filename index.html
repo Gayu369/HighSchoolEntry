@@ -168,15 +168,22 @@
       }
 
       .main-panel {
+        display: flex;
+        flex-direction: column;
+        min-height: 760px;
         padding: 18px;
       }
 
       .prompt-box {
+        position: sticky;
+        bottom: 12px;
+        z-index: 5;
         background: linear-gradient(135deg, rgba(109,94,247,0.08), rgba(52,209,191,0.08));
         border: 1px solid rgba(109,94,247,0.12);
         border-radius: 22px;
         padding: 16px;
-        margin-bottom: 18px;
+        margin-top: auto;
+        box-shadow: 0 -10px 24px rgba(109,94,247,0.08);
       }
 
       label {
@@ -469,15 +476,19 @@
           .replace(/'/g, '&#039;');
       }
 
-      function appendChatMessage(name, text, tone = 'agent') {
-        const thread = resultsArea.querySelector('.chat-thread') || (() => {
-          const container = document.createElement('div');
-          container.className = 'chat-thread';
+      function ensureChatThread() {
+        let thread = resultsArea.querySelector('.chat-thread');
+        if (!thread) {
+          thread = document.createElement('div');
+          thread.className = 'chat-thread';
           resultsArea.innerHTML = '';
-          resultsArea.appendChild(container);
-          return container;
-        })();
+          resultsArea.appendChild(thread);
+        }
+        return thread;
+      }
 
+      function appendChatMessage(name, text, tone = 'agent') {
+        const thread = ensureChatThread();
         const message = document.createElement('div');
         message.className = `chat-message ${tone}`;
 
@@ -497,7 +508,8 @@
 
       function renderInitialCards() {
         resultsArea.innerHTML = '';
-        appendChatMessage('Orchestrator', 'Turn on one or more agents and click Run Agents to begin the school-planning workflow.', 'orchestrator');
+        const thread = ensureChatThread();
+        thread.innerHTML = '';
       }
 
       document.querySelectorAll('.toggle-btn').forEach(button => {
@@ -781,6 +793,38 @@
         }
       }
 
+      function chooseAgentsForPrompt(prompt) {
+        const text = prompt.toLowerCase();
+        const scores = {
+          interview: 0,
+          school: 0,
+          extracurricular: 0
+        };
+
+        const keywordMap = {
+          interview: ['interview', 'speech', 'mock interview', 'present', 'eye contact', 'confidence', 'voice', 'answer', 'communication', 'practice'],
+          school: ['school', 'high school', 'vancouver', 'program', 'academy', 'reputation', 'admission', 'college', 'ranking', 'courses', 'teacher'],
+          extracurricular: ['sports', 'art', 'club', 'clubs', 'music', 'drama', 'robotics', 'coding', 'elective', 'football', 'soccer', 'dance', 'volunteer', 'activity', 'activities']
+        };
+
+        Object.entries(keywordMap).forEach(([key, words]) => {
+          words.forEach(word => {
+            if (text.includes(word)) scores[key] += 1;
+          });
+        });
+
+        const active = Object.entries(AGENTS)
+          .filter(([, agent]) => agent.on)
+          .map(([key, agent]) => ({ key, name: agent.label, score: scores[key] || 0 }));
+
+        if (!active.length) return [];
+
+        const selected = active.filter(item => item.score > 0);
+        return (selected.length ? selected : active)
+          .sort((a, b) => b.score - a.score || Math.random() - 0.5)
+          .map(item => ({ key: item.key, name: item.name }));
+      }
+
       async function orchestrateAgents() {
         const userMessage = userInput.value.trim();
         if (!userMessage) {
@@ -789,50 +833,35 @@
           return;
         }
 
-        const enabledNames = Object.entries(AGENTS)
-          .filter(([, agent]) => agent.on)
-          .map(([key, agent]) => ({ key, name: agent.label }));
-
-        if (!enabledNames.length) {
+        const selectedAgents = chooseAgentsForPrompt(userMessage);
+        if (!selectedAgents.length) {
           setTrace(['No agents are switched on. Turn on at least one agent before running the workflow.']);
           renderInitialCards();
           return;
         }
 
         resultsArea.innerHTML = '';
+        const thread = ensureChatThread();
+        thread.innerHTML = '';
+        appendChatMessage('You', userMessage, 'orchestrator');
+
         const trace = ['Orchestrator started.'];
-        trace.push(`Checking active agents: ${enabledNames.map(item => item.name).join(', ')}`);
+        trace.push(`Prompt matched these agents: ${selectedAgents.map(item => item.name).join(', ')}`);
         setTrace(trace);
-        appendChatMessage('Orchestrator', `Checking active agents: ${enabledNames.map(item => item.name).join(', ')}`, 'orchestrator');
 
         let previousOutput = userMessage;
-        const results = [];
 
-        for (const item of enabledNames) {
-          trace.push(`Running ${item.name}...`);
-          setTrace(trace);
-          appendChatMessage('Orchestrator', `Running ${item.name}...`, 'orchestrator');
-
+        for (const item of selectedAgents) {
+          trace.push(`Running ${item.name} based on the prompt...`);
           const output = await runSingleAgent(item.key, userMessage, previousOutput);
-          const question = item.key === 'interview'
-            ? 'Tell us about a hobby or subject you enjoy and why it matters to you.'
-            : null;
-
-          results.push({ name: item.name, output, question });
           previousOutput = output;
-
-          const messageText = item.key === 'interview'
-            ? `${item.name}: ${output} \n\nMock question: ${question}`
-            : `${item.name}: ${output}`;
-
-          appendChatMessage(item.name, messageText, 'agent');
+          appendChatMessage(item.name, output, 'agent');
           trace.push(`${item.name} finished.`);
           setTrace(trace);
         }
 
-        trace.push('Workflow complete. Results are ready to display.');
+        trace.push('Workflow complete.');
         setTrace(trace);
-        appendChatMessage('Orchestrator', 'Workflow complete. Results are ready to display.', 'orchestrator');
       }
 
       runAgentsBtn.addEventListener('click', orchestrateAgents);
