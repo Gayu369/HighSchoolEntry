@@ -305,6 +305,27 @@
         white-space: pre-wrap;
       }
 
+      .school-list {
+        margin: 10px 0 0;
+        padding-left: 18px;
+        color: var(--ink);
+      }
+
+      .school-list li {
+        margin-bottom: 6px;
+        line-height: 1.5;
+      }
+
+      .school-list a {
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .school-list a:hover {
+        text-decoration: underline;
+      }
+
       .interview-badge { background: rgba(109,94,247,0.12); color: var(--accent); }
       .school-badge { background: rgba(52,209,191,0.12); color: #0b7b71; }
       .club-badge { background: rgba(255, 159, 110, 0.15); color: #b95d00; }
@@ -573,17 +594,34 @@
         const basePrompt = `You are the ${agent.label}. Keep content suitable for ages 1 to 13, friendly, encouraging, and strict. Do not help with exact interview answers or application wording. The student should write their own ideas. Only help with grammar and fluency. User message: ${userMessage}. Context: ${previousContext || 'No prior output yet.'}`;
 
         const proxyReply = await callProxy(basePrompt);
-        const schoolList = `Recommended Vancouver, BC, Canada high schools: Vancouver College (https://www.vancollege.ca), Point Grey Secondary (https://pointgrey.vsb.bc.ca), Prince of Wales Secondary (https://pw.vsb.bc.ca), Eric Hamber Secondary (https://erichamber.vsb.bc.ca), Lord Byng Secondary (https://lordbyng.vsb.bc.ca), Killarney Secondary (https://killarney.vsb.bc.ca), John Oliver Secondary (https://johnoliver.vsb.bc.ca), David Thompson Secondary (https://davidthompson.vsb.bc.ca), and Churchill Secondary (https://churchill.vsb.bc.ca).`;
+        const schoolInfo = [
+          { name: 'Vancouver College', url: 'https://www.vancollege.ca' },
+          { name: 'Point Grey Secondary', url: 'https://pointgrey.vsb.bc.ca' },
+          { name: 'Prince of Wales Secondary', url: 'https://pw.vsb.bc.ca' },
+          { name: 'Eric Hamber Secondary', url: 'https://erichamber.vsb.bc.ca' },
+          { name: 'Lord Byng Secondary', url: 'https://lordbyng.vsb.bc.ca' },
+          { name: 'Killarney Secondary', url: 'https://killarney.vsb.bc.ca' },
+          { name: 'John Oliver Secondary', url: 'https://johnoliver.vsb.bc.ca' },
+          { name: 'David Thompson Secondary', url: 'https://davidthompson.vsb.bc.ca' },
+          { name: 'Churchill Secondary', url: 'https://churchill.vsb.bc.ca' }
+        ];
 
         if (agentKey === 'school') {
-          return `${proxyReply || buildFallback(agent.label, userMessage, previousContext)}\n\n${schoolList}`;
+          const base = proxyReply || buildFallback(agent.label, userMessage, previousContext);
+          const listHtml = schoolInfo.map(school =>
+            `<li><a href="${school.url}" target="_blank" rel="noreferrer">${school.name}</a></li>`
+          ).join('');
+          return {
+            text: `${base}\n\nRecommended Vancouver, BC, Canada high schools:`,
+            schools: listHtml
+          };
         }
 
         if (proxyReply) {
-          return proxyReply;
+          return { text: proxyReply };
         }
 
-        return buildFallback(agent.label, userMessage, previousContext);
+        return { text: buildFallback(agent.label, userMessage, previousContext) };
       }
 
       function renderInterviewChatCard(result) {
@@ -857,9 +895,33 @@
 
         for (const item of selectedAgents) {
           trace.push(`Running ${item.name} based on the prompt...`);
-          const output = await runSingleAgent(item.key, userMessage, previousOutput);
-          previousOutput = output;
-          appendChatMessage(item.name, output, 'agent');
+          const result = await runSingleAgent(item.key, userMessage, previousOutput);
+          previousOutput = typeof result === 'string' ? result : result.text;
+
+          const message = document.createElement('div');
+          message.className = 'chat-message agent';
+
+          const header = document.createElement('div');
+          header.className = 'chat-header';
+          header.textContent = item.name;
+
+          const body = document.createElement('div');
+          body.className = 'chat-body';
+          body.textContent = typeof result === 'string' ? result : result.text;
+
+          message.appendChild(header);
+          message.appendChild(body);
+
+          if (item.key === 'school' && typeof result !== 'string' && result.schools) {
+            const list = document.createElement('ul');
+            list.className = 'school-list';
+            list.innerHTML = result.schools;
+            message.appendChild(list);
+          }
+
+          thread.appendChild(message);
+          resultsArea.scrollTop = resultsArea.scrollHeight;
+
           trace.push(`${item.name} finished.`);
           setTrace(trace);
         }
