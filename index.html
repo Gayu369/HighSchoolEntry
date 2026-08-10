@@ -286,7 +286,7 @@
         background: linear-gradient(135deg, rgba(109,94,247,0.08), rgba(52,209,191,0.08));
       }
 
-      .chat-message.orchestrator {
+      .chat-message.user {
         justify-self: flex-end;
         background: linear-gradient(135deg, rgba(255, 159, 110, 0.12), rgba(109,94,247,0.09));
       }
@@ -843,7 +843,7 @@
         resultsArea.innerHTML = '';
         const thread = ensureChatThread();
         thread.innerHTML = '';
-        appendChatMessage('You', userMessage, 'orchestrator');
+        appendChatMessage('You', userMessage, 'user');
 
         const trace = ['Orchestrator started.'];
         trace.push(`Prompt matched these agents: ${selectedAgents.map(item => item.name).join(', ')}`);
