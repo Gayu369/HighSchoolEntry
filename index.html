@@ -186,6 +186,13 @@
         box-shadow: 0 -10px 24px rgba(109,94,247,0.08);
       }
 
+      .main-panel-inner {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        flex: 1;
+      }
+
       label {
         display: block;
         margin-bottom: 10px;
@@ -445,20 +452,22 @@
         </aside>
 
         <section class="panel main-panel">
-          <h2>Agent Outputs</h2>
+          <div class="main-panel-inner">
+            <h2>Agent Outputs</h2>
+
+            <div id="results" class="results">
+              <div class="result-card">
+                <h3>Orchestrator</h3>
+                <p>Turn on one or more agents and click Run Agents to begin the school-planning workflow.</p>
+              </div>
+            </div>
+          </div>
 
           <div class="prompt-box">
             <label for="userInput">Your message</label>
             <textarea id="userInput" placeholder="Example: I want a strong science program, I love soccer and I am looking for a school with a friendly community.">I want a strong science program, I love soccer, and I want a school with a friendly community and a good arts program.</textarea>
             <div class="actions">
               <button id="runAgentsBtn" class="primary-btn">Run Agents</button>
-            </div>
-          </div>
-
-          <div id="results" class="results">
-            <div class="result-card">
-              <h3>Orchestrator</h3>
-              <p>Turn on one or more agents and click Run Agents to begin the school-planning workflow.</p>
             </div>
           </div>
         </section>
@@ -876,6 +885,8 @@
           renderInitialCards();
           return;
         }
+
+        userInput.value = '';
 
         const selectedAgents = chooseAgentsForPrompt(userMessage);
         if (!selectedAgents.length) {
