@@ -257,6 +257,47 @@
         letter-spacing: 0.08em;
       }
 
+      .chat-thread {
+        display: grid;
+        gap: 14px;
+      }
+
+      .chat-message {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 90%;
+        padding: 14px 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(109,94,247,0.1);
+        background: rgba(255,255,255,0.75);
+        box-shadow: 0 8px 20px rgba(93, 101, 168, 0.08);
+      }
+
+      .chat-message.agent {
+        justify-self: flex-start;
+        background: linear-gradient(135deg, rgba(109,94,247,0.08), rgba(52,209,191,0.08));
+      }
+
+      .chat-message.orchestrator {
+        justify-self: flex-end;
+        background: linear-gradient(135deg, rgba(255, 159, 110, 0.12), rgba(109,94,247,0.09));
+      }
+
+      .chat-header {
+        font-weight: 800;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .chat-body {
+        color: var(--ink);
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+
       .interview-badge { background: rgba(109,94,247,0.12); color: var(--accent); }
       .school-badge { background: rgba(52,209,191,0.12); color: #0b7b71; }
       .club-badge { background: rgba(255, 159, 110, 0.15); color: #b95d00; }
@@ -428,13 +469,35 @@
           .replace(/'/g, '&#039;');
       }
 
+      function appendChatMessage(name, text, tone = 'agent') {
+        const thread = resultsArea.querySelector('.chat-thread') || (() => {
+          const container = document.createElement('div');
+          container.className = 'chat-thread';
+          resultsArea.innerHTML = '';
+          resultsArea.appendChild(container);
+          return container;
+        })();
+
+        const message = document.createElement('div');
+        message.className = `chat-message ${tone}`;
+
+        const header = document.createElement('div');
+        header.className = 'chat-header';
+        header.textContent = name;
+
+        const body = document.createElement('div');
+        body.className = 'chat-body';
+        body.textContent = text;
+
+        message.appendChild(header);
+        message.appendChild(body);
+        thread.appendChild(message);
+        resultsArea.scrollTop = resultsArea.scrollHeight;
+      }
+
       function renderInitialCards() {
-        resultsArea.innerHTML = `
-          <div class="result-card">
-            <h3>Orchestrator</h3>
-            <p>Turn on one or more agents and click Run Agents to begin the school-planning workflow.</p>
-          </div>
-        `;
+        resultsArea.innerHTML = '';
+        appendChatMessage('Orchestrator', 'Turn on one or more agents and click Run Agents to begin the school-planning workflow.', 'orchestrator');
       }
 
       document.querySelectorAll('.toggle-btn').forEach(button => {
@@ -505,43 +568,173 @@
         return buildFallback(agent.label, userMessage, previousContext);
       }
 
+      function renderInterviewChatCard(result) {
+        const container = document.createElement('div');
+        container.className = 'result-card';
+
+        const label = document.createElement('span');
+        label.className = 'badge interview-badge';
+        label.textContent = result.name;
+
+        const title = document.createElement('h3');
+        title.textContent = 'Mock Interview Prep';
+
+        const promptText = document.createElement('p');
+        promptText.innerHTML = `<strong>Sample prompt:</strong> ${escapeHtml(result.question || 'Tell us about a time you worked hard to improve something.')}`;
+
+        const voiceRow = document.createElement('div');
+        voiceRow.className = 'voice-row';
+
+        const speechBtn = document.createElement('button');
+        speechBtn.className = 'icon-btn';
+        speechBtn.type = 'button';
+        speechBtn.textContent = '🔊';
+        speechBtn.title = 'Play question aloud';
+        speechBtn.dataset.voiceQuestion = result.question || 'Tell us about a time you worked hard to improve something.';
+
+        const micBtn = document.createElement('button');
+        micBtn.className = 'icon-btn';
+        micBtn.type = 'button';
+        micBtn.textContent = '🎙️';
+        micBtn.title = 'Answer with microphone';
+        micBtn.dataset.mic = 'true';
+
+        voiceRow.appendChild(speechBtn);
+        voiceRow.appendChild(micBtn);
+
+        const answerBoxWrap = document.createElement('div');
+        answerBoxWrap.className = 'answer-box';
+
+        const textarea = document.createElement('textarea');
+        textarea.id = 'interviewAnswer';
+        textarea.placeholder = 'Record your answer or type it here...';
+
+        const reviewBtn = document.createElement('button');
+        reviewBtn.type = 'button';
+        reviewBtn.className = 'review-btn';
+        reviewBtn.textContent = 'Review my answer';
+        reviewBtn.dataset.review = 'interview';
+
+        answerBoxWrap.appendChild(textarea);
+        answerBoxWrap.appendChild(reviewBtn);
+
+        const statusBox = document.createElement('div');
+        statusBox.className = 'status-box';
+        statusBox.textContent = result.output;
+
+        container.appendChild(label);
+        container.appendChild(title);
+        container.appendChild(promptText);
+        container.appendChild(voiceRow);
+        container.appendChild(answerBoxWrap);
+        container.appendChild(statusBox);
+
+        resultsArea.appendChild(container);
+
+        speechBtn.addEventListener('click', () => {
+          const text = speechBtn.dataset.voiceQuestion;
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.1;
+            utterance.volume = 1;
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utterance);
+          }
+        });
+
+        if (('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window)) {
+          const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+          const recognition = new SpeechRecognitionCtor();
+          recognition.lang = 'en-US';
+          recognition.interimResults = false;
+          recognition.maxAlternatives = 1;
+
+          micBtn.addEventListener('click', () => recognition.start());
+          recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            textarea.value = transcript;
+          };
+        } else {
+          micBtn.title = 'Microphone not supported in this browser';
+        }
+
+        reviewBtn.addEventListener('click', async () => {
+          const answer = textarea.value.trim();
+          const message = answer
+            ? `Review this answer for grammar, fluency, and interview confidence. Keep it age-appropriate for ages 1-13. Do not write the student's answer for them. Only improve grammar and clarity: ${answer}`
+            : 'The student has not answered yet.';
+          const review = await callProxy(message) || 'Try speaking more slowly, keeping your answers short, and making eye contact with the listener. Focus on clarity, calm breathing, and a friendly smile.';
+
+          const feedback = document.createElement('div');
+          feedback.className = 'status-box';
+          feedback.innerHTML = `<strong>Feedback:</strong> ${escapeHtml(review)}`;
+          container.appendChild(feedback);
+        });
+      }
+
+      function renderOtherAgentChatCard(result) {
+        const container = document.createElement('div');
+        container.className = 'result-card';
+
+        const label = document.createElement('span');
+        label.className = 'badge ' + (result.name === 'School Matchmaker' ? 'school-badge' : 'club-badge');
+        label.textContent = result.name;
+
+        const title = document.createElement('h3');
+        title.textContent = result.name;
+
+        const statusBox = document.createElement('div');
+        statusBox.className = 'status-box';
+        statusBox.textContent = result.output;
+
+        container.appendChild(label);
+        container.appendChild(title);
+        container.appendChild(statusBox);
+        resultsArea.appendChild(container);
+      }
+
       function renderResultCards(results) {
-        const cards = results.map((result) => {
-          const badgeClass = result.name === 'Interview Coach'
-            ? 'interview-badge'
-            : result.name === 'School Matchmaker'
-              ? 'school-badge'
-              : 'club-badge';
+        resultsArea.innerHTML = '';
+        const thread = document.createElement('div');
+        thread.className = 'chat-thread';
+        resultsArea.appendChild(thread);
+
+        results.forEach((result) => {
+          const message = document.createElement('div');
+          message.className = 'chat-message agent';
+
+          const header = document.createElement('div');
+          header.className = 'chat-header';
+          header.textContent = result.name;
+
+          const body = document.createElement('div');
+          body.className = 'chat-body';
+          body.textContent = result.output;
+
+          message.appendChild(header);
+          message.appendChild(body);
+          thread.appendChild(message);
 
           if (result.name === 'Interview Coach') {
-            return `
-              <div class="result-card">
-                <span class="badge ${badgeClass}">${escapeHtml(result.name)}</span>
-                <h3>Mock Interview Prep</h3>
-                <p><strong>Sample prompt:</strong> ${escapeHtml(result.question || 'Tell us about a time you worked hard to improve something.')}</p>
-                <div class="voice-row">
-                  <button class="icon-btn" data-voice-question="${escapeHtml(result.question || 'Tell us about a time you worked hard to improve something.')}" aria-label="Play question">🔊</button>
-                  <button class="icon-btn" data-mic="true" aria-label="Answer with microphone">🎙️</button>
-                </div>
-                <div class="answer-box">
-                  <textarea id="interviewAnswer" placeholder="Record your answer or type it here..."></textarea>
-                  <button class="review-btn" data-review="interview">Review my answer</button>
-                </div>
-                <div class="status-box">${escapeHtml(result.output)}</div>
+            const nested = document.createElement('div');
+            nested.className = 'result-card';
+            nested.innerHTML = `
+              <span class="badge interview-badge">Interview Coach</span>
+              <h3>Mock Interview Prep</h3>
+              <p><strong>Sample prompt:</strong> ${escapeHtml(result.question || 'Tell us about a time you worked hard to improve something.')}</p>
+              <div class="voice-row">
+                <button class="icon-btn" type="button" data-voice-question="${escapeHtml(result.question || 'Tell us about a time you worked hard to improve something.')}">🔊</button>
+                <button class="icon-btn" type="button" data-mic="true">🎙️</button>
+              </div>
+              <div class="answer-box">
+                <textarea id="interviewAnswer" placeholder="Record your answer or type it here..."></textarea>
+                <button class="review-btn" type="button" data-review="interview">Review my answer</button>
               </div>
             `;
+            thread.appendChild(nested);
           }
-
-          return `
-            <div class="result-card">
-              <span class="badge ${badgeClass}">${escapeHtml(result.name)}</span>
-              <h3>${escapeHtml(result.name)}</h3>
-              <div class="status-box">${escapeHtml(result.output)}</div>
-            </div>
-          `;
-        }).join('');
-
-        resultsArea.innerHTML = cards;
+        });
 
         const speechBtn = document.querySelector('[data-voice-question]');
         if (speechBtn) {
@@ -566,19 +759,12 @@
           recognition.interimResults = false;
           recognition.maxAlternatives = 1;
 
-          micBtn.addEventListener('click', () => {
-            recognition.start();
-          });
-
+          micBtn.addEventListener('click', () => recognition.start());
           recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
             const answerBox = document.getElementById('interviewAnswer');
-            if (answerBox) {
-              answerBox.value = transcript;
-            }
+            if (answerBox) answerBox.value = transcript;
           };
-        } else if (micBtn) {
-          micBtn.title = 'Microphone not supported on this browser';
         }
 
         const reviewBtn = document.querySelector('[data-review="interview"]');
@@ -587,10 +773,10 @@
             const answer = document.getElementById('interviewAnswer')?.value || '';
             const message = answer ? `Review this answer for grammar, fluency, and interview confidence. Keep it age-appropriate for ages 1-13. Do not write the student's answer for them. Only improve grammar and clarity: ${answer}` : 'The student has not answered yet.';
             const review = await callProxy(message) || 'Try speaking more slowly, keeping your answers short, and making eye contact with the listener. Focus on clarity, calm breathing, and a friendly smile.';
-            const reviewNode = document.createElement('div');
-            reviewNode.className = 'status-box';
-            reviewNode.innerHTML = `<strong>Feedback:</strong> ${escapeHtml(review)}`;
-            reviewBtn.parentElement.appendChild(reviewNode);
+            const feedback = document.createElement('div');
+            feedback.className = 'status-box';
+            feedback.innerHTML = `<strong>Feedback:</strong> ${escapeHtml(review)}`;
+            reviewBtn.parentElement.appendChild(feedback);
           });
         }
       }
@@ -599,6 +785,7 @@
         const userMessage = userInput.value.trim();
         if (!userMessage) {
           setTrace(['Please type a message before running the agents.']);
+          renderInitialCards();
           return;
         }
 
@@ -612,26 +799,40 @@
           return;
         }
 
+        resultsArea.innerHTML = '';
         const trace = ['Orchestrator started.'];
         trace.push(`Checking active agents: ${enabledNames.map(item => item.name).join(', ')}`);
+        setTrace(trace);
+        appendChatMessage('Orchestrator', `Checking active agents: ${enabledNames.map(item => item.name).join(', ')}`, 'orchestrator');
 
         let previousOutput = userMessage;
         const results = [];
 
         for (const item of enabledNames) {
           trace.push(`Running ${item.name}...`);
+          setTrace(trace);
+          appendChatMessage('Orchestrator', `Running ${item.name}...`, 'orchestrator');
+
           const output = await runSingleAgent(item.key, userMessage, previousOutput);
           const question = item.key === 'interview'
             ? 'Tell us about a hobby or subject you enjoy and why it matters to you.'
             : null;
+
           results.push({ name: item.name, output, question });
           previousOutput = output;
+
+          const messageText = item.key === 'interview'
+            ? `${item.name}: ${output} \n\nMock question: ${question}`
+            : `${item.name}: ${output}`;
+
+          appendChatMessage(item.name, messageText, 'agent');
           trace.push(`${item.name} finished.`);
+          setTrace(trace);
         }
 
         trace.push('Workflow complete. Results are ready to display.');
         setTrace(trace);
-        renderResultCards(results);
+        appendChatMessage('Orchestrator', 'Workflow complete. Results are ready to display.', 'orchestrator');
       }
 
       runAgentsBtn.addEventListener('click', orchestrateAgents);
