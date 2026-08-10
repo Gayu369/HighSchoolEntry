@@ -628,7 +628,27 @@
         return `Extracurricular Agent: Based on ${cleanMessage}, focus on clubs and activities that fit the student’s interests and energy. Good choices could include sports, art, robotics, debate, music, drama, coding clubs, and volunteering. Try to join a few activities that let the student grow, make friends, and show strengths outside class. Keep the suggestions age-appropriate and make sure the activities match the student’s goals. ${previous}`;
       }
 
-      function getSchoolListForPrompt(prompt) {
+      async function fetchSchoolWebSummary(url) {
+        try {
+          const plainUrl = String(url).replace(/^https?:\/\//i, '').replace(/\/$/, '');
+          const proxyUrl = `https://r.jina.ai/http://${plainUrl}`;
+          const response = await fetch(proxyUrl, {
+            headers: { 'Accept': 'text/plain' }
+          });
+
+          if (!response.ok) {
+            throw new Error(`School site fetch failed: ${response.status}`);
+          }
+
+          const text = await response.text();
+          return String(text || '').slice(0, 5000).toLowerCase();
+        } catch (error) {
+          console.warn('School website fetch failed for', url, error);
+          return '';
+        }
+      }
+
+      async function getSchoolListForPrompt(prompt) {
         const text = prompt.toLowerCase();
         const publicSchools = [
           { name: 'Britannia Secondary', url: 'https://britannia.vsb.bc.ca/', tags: ['arts', 'music', 'academic', 'balanced', 'community'] },
@@ -661,21 +681,35 @@
           { name: 'Stratford Hall', url: 'https://www.stratfordhall.bc.ca/', tags: ['arts', 'academic', 'strong', 'community'] }
         ];
 
-        const allSchools = [...publicSchools, ...privateSchools];
         const categoryRules = [
           { key: 'stem', pattern: /science|stem|math|technology|coding|robot|programming|engineering|research/ },
           { key: 'arts', pattern: /art|music|dance|drama|creative|design|theatre|film/ },
           { key: 'sports', pattern: /sport|soccer|football|basketball|athletic|track|swim|volleyball|hockey|club/ },
-          { key: 'academic', pattern: /academic|strong|program|reputation|ranking|rigorous|honors|ib/i }
+          { key: 'academic', pattern: /academic|strong|program|reputation|ranking|rigorous|honors|ib/ }
         ];
 
-        const scoredSchools = allSchools.map(school => {
-          const baseScore = categoryRules.reduce((score, rule) => score + (rule.pattern.test(text) && school.tags.includes(rule.key) ? 2 : 0), 0);
-          const exactNameHit = school.name.toLowerCase().includes(text) ? 1 : 0;
-          return { school, score: baseScore + exactNameHit };
-        });
+        const allSchools = [...publicSchools, ...privateSchools];
+        const scoredSchools = await Promise.all(allSchools.map(async (school) => {
+          const pageText = await fetchSchoolWebSummary(school.url);
+          const pageMatches = `${school.tags.join(' ')} ${pageText}`.toLowerCase();
+          let score = 0;
 
-        const relevant = scoredSchools.filter(entry => entry.score > 0).sort((a, b) => b.score - a.score || a.school.name.localeCompare(b.school.name));
+          categoryRules.forEach(rule => {
+            if (rule.pattern.test(text) && pageMatches.includes(rule.key)) score += 3;
+            if (rule.pattern.test(text) && school.tags.includes(rule.key)) score += 2;
+          });
+
+          if (school.name.toLowerCase().includes(text.split(' ')[0])) score += 2;
+          if (pageText && pageText.includes(text)) score += 2;
+          if (pageMatches.includes(text)) score += 1;
+
+          return { school, score };
+        }));
+
+        const relevant = scoredSchools
+          .filter(entry => entry.score > 0)
+          .sort((a, b) => b.score - a.score || a.school.name.localeCompare(b.school.name));
+
         const selected = relevant.length ? relevant.slice(0, 6).map(entry => entry.school) : [
           publicSchools.find(school => school.name === 'Point Grey Secondary') || publicSchools[0],
           publicSchools.find(school => school.name === 'Eric Hamber Secondary') || publicSchools[1],
@@ -701,7 +735,7 @@
         const basePrompt = `You are the ${agent.label}. Keep content suitable for ages 1 to 13, friendly, encouraging, and strict. ${appDraftGuard} The student should write their own ideas. Only help with grammar and fluency, school matching, and interview strategy. User message: ${safePrompt}. Context: ${previousContext || 'No prior output yet.'}`;
 
         const proxyReply = await callProxy(basePrompt);
-        const schoolInfo = getSchoolListForPrompt(safePrompt);
+        const schoolInfo = agentKey === 'school' ? await getSchoolListForPrompt(safePrompt) : null;
 
         if (agentKey === 'school') {
           const base = proxyReply || buildFallback(agent.label, safePrompt, previousContext);
