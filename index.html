@@ -26,6 +26,24 @@
         --extracurricular: #ff9f6e;
       }
 
+      body[data-theme="lavender"] {
+        --bg-1: #f5f7ff;
+        --bg-2: #eef9ff;
+        --panel: rgba(255, 255, 255, 0.82);
+        --panel-strong: #ffffff;
+        --ink: #1d2340;
+        --muted: #5f6b8f;
+        --border: rgba(106, 123, 255, 0.2);
+        --accent: #6d5ef7;
+        --accent-2: #34d1bf;
+        --accent-3: #ff9f6e;
+        --accent-4: #ff5d8f;
+        --success: #14b77d;
+        --warning: #f3b100;
+        --danger: #ef5a7a;
+        --shadow: 0 18px 48px rgba(77, 84, 161, 0.18);
+      }
+
       body[data-theme="sunset"] {
         --bg-1: #fff1e8;
         --bg-2: #ffe9f2;
@@ -116,11 +134,26 @@
       @keyframes floatIn {
         from {
           opacity: 0;
-          transform: translateY(14px) scale(0.98);
+          transform: translateY(18px) scale(0.96);
         }
         to {
           opacity: 1;
           transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes messagePop {
+        0% {
+          opacity: 0;
+          transform: translateY(18px) scale(0.92) rotateX(10deg);
+        }
+        70% {
+          opacity: 1;
+          transform: translateY(-3px) scale(1.01) rotateX(0deg);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1) rotateX(0deg);
         }
       }
 
@@ -206,7 +239,7 @@
         border-radius: 30px;
         box-shadow: var(--shadow);
         backdrop-filter: blur(14px);
-        animation: floatIn 0.45s ease-out;
+        animation: floatIn 0.55s cubic-bezier(.2,.8,.2,1);
       }
 
       .sidebar,
@@ -395,7 +428,7 @@
         border: 1px solid rgba(109,94,247,0.1);
         background: rgba(255,255,255,0.75);
         box-shadow: 0 8px 20px rgba(93, 101, 168, 0.08);
-        animation: floatIn 0.45s ease-out;
+        animation: messagePop 0.55s cubic-bezier(.2,.8,.2,1);
       }
 
       .chat-message.agent {
@@ -519,6 +552,41 @@
         cursor: pointer;
       }
 
+      .theme-swatches {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .theme-swatch {
+        width: 100%;
+        height: 42px;
+        border-radius: 12px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        position: relative;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.12);
+      }
+
+      .theme-swatch:hover {
+        transform: translateY(-2px) scale(1.02);
+      }
+
+      .theme-swatch.active {
+        border-color: var(--ink);
+        box-shadow: 0 0 0 3px rgba(109,94,247,0.18);
+      }
+
+      .theme-swatch::after {
+        content: "";
+        position: absolute;
+        inset: 7px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.15);
+      }
+
       .trace-list {
         list-style: none;
         padding: 0;
@@ -599,20 +667,19 @@
             <button class="toggle-btn on" data-agent="extracurricular">ON</button>
           </div>
 
-          <div class="agent-toggle" data-agent="theme" data-color="school" style="margin-top: 18px;">
-            <div class="agent-label">
+          <div class="agent-toggle" data-agent="theme" data-color="school" style="margin-top: 18px; display: block;">
+            <div class="agent-label" style="margin-bottom: 12px;">
               <span class="agent-dot"></span>
               <span>Theme</span>
             </div>
-            <select id="themeSelect" style="border: 1px solid rgba(109,94,247,0.2); border-radius: 10px; padding: 8px 10px; background: rgba(255,255,255,0.85); font-weight: 700; color: var(--ink);">
-              <option value="lavender">Lavender</option>
-              <option value="sunset">Sunset</option>
-              <option value="ocean">Ocean</option>
-              <option value="forest">Forest</option>
-              <option value="midnight">Midnight</option>
-              <option value="violet-night">Violet Night</option>
-              <option value="berry">Berry</option>
-            </select>
+            <div id="themeSwatches" class="theme-swatches" aria-label="Theme selection">
+              <button type="button" class="theme-swatch active" data-theme="lavender" style="background: linear-gradient(135deg, #6d5ef7, #34d1bf);" title="Lavender"></button>
+              <button type="button" class="theme-swatch" data-theme="sunset" style="background: linear-gradient(135deg, #ff7a59, #ffb14a);" title="Sunset"></button>
+              <button type="button" class="theme-swatch" data-theme="ocean" style="background: linear-gradient(135deg, #1f9fe6, #2ec4b6);" title="Ocean"></button>
+              <button type="button" class="theme-swatch" data-theme="forest" style="background: linear-gradient(135deg, #2c8d5a, #36c38c);" title="Forest"></button>
+              <button type="button" class="theme-swatch" data-theme="midnight" style="background: linear-gradient(135deg, #101827, #8b7dff);" title="Midnight"></button>
+              <button type="button" class="theme-swatch" data-theme="violet-night" style="background: linear-gradient(135deg, #160f2a, #a56bff);" title="Violet Night"></button>
+            </div>
           </div>
         </aside>
 
@@ -798,37 +865,9 @@
 
       async function getSchoolListForPrompt(prompt) {
         const text = prompt.toLowerCase();
-        const publicSchools = [
-          { name: 'Britannia Secondary', url: 'https://britannia.vsb.bc.ca/', tags: ['arts', 'music', 'academic', 'balanced', 'community'] },
-          { name: 'Churchill Secondary', url: 'https://churchill.vsb.bc.ca/', tags: ['arts', 'sports', 'community', 'academic', 'strong'] },
-          { name: 'David Thompson Secondary', url: 'https://davidthompson.vsb.bc.ca/', tags: ['academic', 'balanced', 'program', 'strong'] },
-          { name: 'Eric Hamber Secondary', url: 'https://erichamber.vsb.bc.ca/', tags: ['stem', 'science', 'math', 'technology', 'strong'] },
-          { name: 'Gladstone Secondary', url: 'https://gladstone.vsb.bc.ca/', tags: ['academic', 'balanced', 'community', 'strong'] },
-          { name: 'John Oliver Secondary', url: 'https://johnoliver.vsb.bc.ca/', tags: ['sports', 'arts', 'balanced', 'community', 'clubs'] },
-          { name: 'Killarney Secondary', url: 'https://killarney.vsb.bc.ca/', tags: ['sports', 'clubs', 'athletic', 'music', 'community'] },
-          { name: 'King George Secondary', url: 'https://kinggeorge.vsb.bc.ca/', tags: ['sports', 'academic', 'balanced', 'community'] },
-          { name: 'Lord Byng Secondary', url: 'https://lordbyng.vsb.bc.ca/', tags: ['arts', 'music', 'academic', 'balanced', 'community'] },
-          { name: 'Magee Secondary', url: 'https://magee.vsb.bc.ca/', tags: ['sports', 'academic', 'strong', 'community'] },
-          { name: 'McMath Secondary', url: 'https://mcmath.vsb.bc.ca/', tags: ['science', 'math', 'technology', 'academic', 'strong'] },
-          { name: 'Point Grey Secondary', url: 'https://pointgrey.vsb.bc.ca/', tags: ['arts', 'music', 'dance', 'creative', 'balanced', 'strong'] },
-          { name: 'Prince of Wales Secondary', url: 'https://pw.vsb.bc.ca/', tags: ['sports', 'balanced', 'academic', 'community', 'clubs'] },
-          { name: 'Tupper Secondary', url: 'https://tupper.vsb.bc.ca/', tags: ['academic', 'arts', 'balanced', 'community'] },
-          { name: 'Vancouver School of Arts and Academics (VSA)', url: 'https://vsab.vsb.bc.ca/', tags: ['arts', 'music', 'creative', 'academic', 'strong'] },
-          { name: 'Vancouver Technical Secondary', url: 'https://vancouvertechnical.vsb.bc.ca/', tags: ['stem', 'science', 'math', 'technology', 'academic'] },
-          { name: 'Windermere Secondary', url: 'https://windermere.vsb.bc.ca/', tags: ['sports', 'academic', 'balanced', 'community'] },
-          { name: 'Vancouver Learning Network', url: 'https://vln.vsb.bc.ca/', tags: ['academic', 'balanced', 'flexible', 'community'] }
-        ].filter(isHighSchoolEntry);
-
-        const privateSchools = [
-          { name: 'Vancouver College', url: 'https://www.vancollege.ca/', tags: ['stem', 'math', 'science', 'academic', 'strong', 'program'] },
-          { name: 'St. George\'s School', url: 'https://www.stgeorges.bc.ca/', tags: ['sports', 'arts', 'academic', 'strong', 'community'] },
-          { name: 'Crofton House', url: 'https://www.croftonhouse.ca/', tags: ['arts', 'music', 'academic', 'strong', 'community'] },
-          { name: 'York House School', url: 'https://www.yorkhouse.ca/', tags: ['arts', 'academic', 'strong', 'community'] },
-          { name: 'Little Flower Academy', url: 'https://littlefloweracademy.ca/', tags: ['arts', 'academic', 'strong', 'community'] },
-          { name: 'King David High School', url: 'https://www.kingdavid.ca/', tags: ['academic', 'community', 'strong'] },
-          { name: 'Stratford Hall', url: 'https://www.stratfordhall.bc.ca/', tags: ['arts', 'academic', 'strong', 'community'] }
-        ].filter(isHighSchoolEntry);
-
+        const allSchools = createVancouverHighSchoolCatalog();
+        const publicSchools = allSchools.filter(school => !/school|academy|college|house|hall|academy/.test(school.name) || /secondary|school of arts|technical|learning network|vancouver learning network/i.test(school.name) || /secondary/i.test(school.name));
+        const privateSchools = allSchools.filter(school => !publicSchools.includes(school));
         const categoryRules = [
           { key: 'stem', pattern: /science|stem|math|technology|coding|robot|programming|engineering|research/ },
           { key: 'arts', pattern: /art|music|dance|drama|creative|design|theatre|film/ },
@@ -1151,6 +1190,36 @@
         return /(school|high school|vancouver|academy|program|admission|student|teacher|clubs|sports|arts|science|math|music|drama|community)/i.test(String(text || ''));
       }
 
+      function createVancouverHighSchoolCatalog() {
+        return [
+          { name: 'Britannia Secondary', url: 'https://britannia.vsb.bc.ca/', tags: ['arts', 'music', 'academic', 'balanced', 'community'] },
+          { name: 'Churchill Secondary', url: 'https://churchill.vsb.bc.ca/', tags: ['arts', 'sports', 'community', 'academic', 'strong'] },
+          { name: 'David Thompson Secondary', url: 'https://davidthompson.vsb.bc.ca/', tags: ['academic', 'balanced', 'program', 'strong'] },
+          { name: 'Eric Hamber Secondary', url: 'https://erichamber.vsb.bc.ca/', tags: ['stem', 'science', 'math', 'technology', 'strong'] },
+          { name: 'Gladstone Secondary', url: 'https://gladstone.vsb.bc.ca/', tags: ['academic', 'balanced', 'community', 'strong'] },
+          { name: 'John Oliver Secondary', url: 'https://johnoliver.vsb.bc.ca/', tags: ['sports', 'arts', 'balanced', 'community', 'clubs'] },
+          { name: 'Killarney Secondary', url: 'https://killarney.vsb.bc.ca/', tags: ['sports', 'clubs', 'athletic', 'music', 'community'] },
+          { name: 'King George Secondary', url: 'https://kinggeorge.vsb.bc.ca/', tags: ['sports', 'academic', 'balanced', 'community'] },
+          { name: 'Lord Byng Secondary', url: 'https://lordbyng.vsb.bc.ca/', tags: ['arts', 'music', 'academic', 'balanced', 'community'] },
+          { name: 'Magee Secondary', url: 'https://magee.vsb.bc.ca/', tags: ['sports', 'academic', 'strong', 'community'] },
+          { name: 'McMath Secondary', url: 'https://mcmath.vsb.bc.ca/', tags: ['science', 'math', 'technology', 'academic', 'strong'] },
+          { name: 'Point Grey Secondary', url: 'https://pointgrey.vsb.bc.ca/', tags: ['arts', 'music', 'dance', 'creative', 'balanced', 'strong'] },
+          { name: 'Prince of Wales Secondary', url: 'https://pw.vsb.bc.ca/', tags: ['sports', 'balanced', 'academic', 'community', 'clubs'] },
+          { name: 'Tupper Secondary', url: 'https://tupper.vsb.bc.ca/', tags: ['academic', 'arts', 'balanced', 'community'] },
+          { name: 'Vancouver School of Arts and Academics (VSA)', url: 'https://vsab.vsb.bc.ca/', tags: ['arts', 'music', 'creative', 'academic', 'strong'] },
+          { name: 'Vancouver Technical Secondary', url: 'https://vancouvertechnical.vsb.bc.ca/', tags: ['stem', 'science', 'math', 'technology', 'academic'] },
+          { name: 'Windermere Secondary', url: 'https://windermere.vsb.bc.ca/', tags: ['sports', 'academic', 'balanced', 'community'] },
+          { name: 'Vancouver Learning Network', url: 'https://vln.vsb.bc.ca/', tags: ['academic', 'balanced', 'flexible', 'community'] },
+          { name: 'Vancouver College', url: 'https://www.vancollege.ca/', tags: ['stem', 'math', 'science', 'academic', 'strong', 'program'] },
+          { name: 'St. George\'s School', url: 'https://www.stgeorges.bc.ca/', tags: ['sports', 'arts', 'academic', 'strong', 'community'] },
+          { name: 'Crofton House', url: 'https://www.croftonhouse.ca/', tags: ['arts', 'music', 'academic', 'strong', 'community'] },
+          { name: 'York House School', url: 'https://www.yorkhouse.ca/', tags: ['arts', 'academic', 'strong', 'community'] },
+          { name: 'Little Flower Academy', url: 'https://littlefloweracademy.ca/', tags: ['arts', 'academic', 'strong', 'community'] },
+          { name: 'King David High School', url: 'https://www.kingdavid.ca/', tags: ['academic', 'community', 'strong'] },
+          { name: 'Stratford Hall', url: 'https://www.stratfordhall.bc.ca/', tags: ['arts', 'academic', 'strong', 'community'] }
+        ].filter(entry => !/(college|university|institute|polytechnic)/i.test(entry.name));
+      }
+
       function looksLikeApplicationDraftRequest(text) {
         const lower = String(text || '').toLowerCase();
         if (isSchoolRelatedPrompt(lower)) return false;
@@ -1175,6 +1244,9 @@
 
       function applyTheme(themeName) {
         document.body.setAttribute('data-theme', themeName);
+        document.querySelectorAll('.theme-swatch').forEach(swatch => {
+          swatch.classList.toggle('active', swatch.dataset.theme === themeName);
+        });
       }
 
       function speakText(text) {
@@ -1297,8 +1369,8 @@
         setTrace(trace);
       }
 
-      document.getElementById('themeSelect').addEventListener('change', (event) => {
-        applyTheme(event.target.value);
+      document.querySelectorAll('.theme-swatch').forEach(button => {
+        button.addEventListener('click', () => applyTheme(button.dataset.theme));
       });
 
       applyTheme('lavender');
