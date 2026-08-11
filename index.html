@@ -254,6 +254,7 @@
         padding: 14px 16px;
         font-size: 1rem;
         color: var(--ink);
+        font-family: "Comic Sans MS", "Trebuchet MS", "Segoe UI", sans-serif;
       }
 
       textarea:focus-visible {
@@ -562,7 +563,7 @@
 
           <div class="prompt-box">
             <label for="userInput">Your message</label>
-            <textarea id="userInput" placeholder="Example: I want a strong science program, I love soccer and I am looking for a school with a friendly community.">I want a strong science program, I love soccer, and I want a school with a friendly community and a good arts program.</textarea>
+            <textarea id="userInput" placeholder="Example: I want a strong science program, I love soccer and I am looking for a school with a friendly community."></textarea>
             <div class="actions">
               <button id="runAgentsBtn" class="primary-btn">Run Agents</button>
             </div>
@@ -1171,8 +1172,6 @@
           renderInitialCards();
           return;
         }
-
-        userInput.value = '';
 
         const selectedAgents = chooseAgentsForPrompt(userMessage);
         if (!selectedAgents.length) {
