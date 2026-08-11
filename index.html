@@ -21,13 +21,58 @@
         --warning: #f3b100;
         --danger: #ef5a7a;
         --shadow: 0 18px 48px rgba(77, 84, 161, 0.18);
+        --interview: #6d5ef7;
+        --school: #1bb9a9;
+        --extracurricular: #ff9f6e;
+      }
+
+      body[data-theme="sunset"] {
+        --bg-1: #fff1e8;
+        --bg-2: #ffe9f2;
+        --panel: rgba(255,255,255,0.82);
+        --ink: #3c2341;
+        --muted: #6b4d65;
+        --border: rgba(255, 126, 114, 0.2);
+        --accent: #ff7a59;
+        --accent-2: #ffb14a;
+        --accent-3: #ff5ea8;
+        --accent-4: #7b61ff;
+        --shadow: 0 18px 48px rgba(255, 120, 92, 0.16);
+      }
+
+      body[data-theme="ocean"] {
+        --bg-1: #edfaff;
+        --bg-2: #e3f8ff;
+        --panel: rgba(255,255,255,0.82);
+        --ink: #16314e;
+        --muted: #4a6889;
+        --border: rgba(53, 152, 211, 0.2);
+        --accent: #1f9fe6;
+        --accent-2: #2ec4b6;
+        --accent-3: #ffad6e;
+        --accent-4: #7a8cff;
+        --shadow: 0 18px 48px rgba(31, 159, 230, 0.14);
+      }
+
+      body[data-theme="forest"] {
+        --bg-1: #effaf1;
+        --bg-2: #ecfff6;
+        --panel: rgba(255,255,255,0.82);
+        --ink: #18392f;
+        --muted: #466a5a;
+        --border: rgba(37, 118, 72, 0.18);
+        --accent: #2c8d5a;
+        --accent-2: #36c38c;
+        --accent-3: #e7a35c;
+        --accent-4: #ff6b8a;
+        --shadow: 0 18px 48px rgba(44, 141, 90, 0.12);
       }
 
       * { box-sizing: border-box; }
 
       body {
         margin: 0;
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: "Trebuchet MS", "Segoe UI", "Arial Rounded MT Bold", sans-serif;
         color: var(--ink);
         background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
       }
@@ -290,11 +335,28 @@
 
       .chat-message.agent {
         justify-self: flex-start;
+        border-left: 6px solid var(--accent);
         background: linear-gradient(135deg, rgba(109,94,247,0.08), rgba(52,209,191,0.08));
+      }
+
+      .chat-message.interview {
+        border-left-color: var(--interview);
+        background: linear-gradient(135deg, rgba(109,94,247,0.10), rgba(168, 152, 255, 0.08));
+      }
+
+      .chat-message.school {
+        border-left-color: var(--school);
+        background: linear-gradient(135deg, rgba(27,185,169,0.10), rgba(129, 225, 210, 0.08));
+      }
+
+      .chat-message.extracurricular {
+        border-left-color: var(--extracurricular);
+        background: linear-gradient(135deg, rgba(255,159,110,0.12), rgba(255, 213, 156, 0.08));
       }
 
       .chat-message.user {
         justify-self: flex-end;
+        border-left-color: var(--accent-4);
         background: linear-gradient(135deg, rgba(255, 159, 110, 0.12), rgba(109,94,247,0.09));
       }
 
@@ -471,6 +533,19 @@
             </div>
             <button class="toggle-btn on" data-agent="extracurricular">ON</button>
           </div>
+
+          <div class="agent-toggle" data-agent="theme" data-color="school" style="margin-top: 18px;">
+            <div class="agent-label">
+              <span class="agent-dot"></span>
+              <span>Theme</span>
+            </div>
+            <select id="themeSelect" style="border: 1px solid rgba(109,94,247,0.2); border-radius: 10px; padding: 8px 10px; background: rgba(255,255,255,0.85); font-weight: 700; color: var(--ink);">
+              <option value="lavender">Lavender</option>
+              <option value="sunset">Sunset</option>
+              <option value="ocean">Ocean</option>
+              <option value="forest">Forest</option>
+            </select>
+          </div>
         </aside>
 
         <section class="panel main-panel">
@@ -622,7 +697,7 @@
                 ? 'Because the prompt mentions sports, I would especially look at Killarney Secondary, Churchill Secondary, and John Oliver Secondary.'
                 : 'These Vancouver high schools are strong choices to compare.';
 
-          return `School Matchmaker: For a student interested in ${cleanMessage}, ${tailored} Compare each school’s programs, culture, academic strengths, and reputation. The final choice should match the student’s interests, grades, and goals.`;
+          return `School Matchmaker: For a student interested in ${cleanMessage}, ${tailored} Compare each high school's programs, culture, academic strengths, and reputation. The final choice should match the student’s interests, grades, and goals.`;
         }
 
         return `Extracurricular Agent: Based on ${cleanMessage}, focus on clubs and activities that fit the student’s interests and energy. Good choices could include sports, art, robotics, debate, music, drama, coding clubs, and volunteering. Try to join a few activities that let the student grow, make friends, and show strengths outside class. Keep the suggestions age-appropriate and make sure the activities match the student’s goals. ${previous}`;
@@ -648,6 +723,11 @@
         }
       }
 
+      function isHighSchoolEntry(school) {
+        const name = String(school.name || '').toLowerCase();
+        return !(name.includes('college') || name.includes('university') || name.includes('institute') || name.includes('polytechnic'));
+      }
+
       async function getSchoolListForPrompt(prompt) {
         const text = prompt.toLowerCase();
         const publicSchools = [
@@ -669,7 +749,7 @@
           { name: 'Vancouver Technical Secondary', url: 'https://vancouvertechnical.vsb.bc.ca/', tags: ['stem', 'science', 'math', 'technology', 'academic'] },
           { name: 'Windermere Secondary', url: 'https://windermere.vsb.bc.ca/', tags: ['sports', 'academic', 'balanced', 'community'] },
           { name: 'Vancouver Learning Network', url: 'https://vln.vsb.bc.ca/', tags: ['academic', 'balanced', 'flexible', 'community'] }
-        ];
+        ].filter(isHighSchoolEntry);
 
         const privateSchools = [
           { name: 'Vancouver College', url: 'https://www.vancollege.ca/', tags: ['stem', 'math', 'science', 'academic', 'strong', 'program'] },
@@ -679,7 +759,7 @@
           { name: 'Little Flower Academy', url: 'https://littlefloweracademy.ca/', tags: ['arts', 'academic', 'strong', 'community'] },
           { name: 'King David High School', url: 'https://www.kingdavid.ca/', tags: ['academic', 'community', 'strong'] },
           { name: 'Stratford Hall', url: 'https://www.stratfordhall.bc.ca/', tags: ['arts', 'academic', 'strong', 'community'] }
-        ];
+        ].filter(isHighSchoolEntry);
 
         const categoryRules = [
           { key: 'stem', pattern: /science|stem|math|technology|coding|robot|programming|engineering|research/ },
@@ -729,13 +809,24 @@
       async function runSingleAgent(agentKey, userMessage, previousContext) {
         const agent = AGENTS[agentKey];
         const safePrompt = sanitizeUserInput(userMessage);
+        const schoolRelated = isSchoolRelatedPrompt(safePrompt);
         const appDraftGuard = looksLikeApplicationDraftRequest(safePrompt)
-          ? 'This is an application-writing request. Refuse and redirect the student to school planning, interview prep, and grammar-only help instead.'
-          : 'This is a general school-planning question. Do not write a personal statement, application essay, application draft, or exact application wording. Keep the response to school matching, interview practice, grammar help, and friendly planning advice only.';
-        const basePrompt = `You are the ${agent.label}. Keep content suitable for ages 1 to 13, friendly, encouraging, and strict. ${appDraftGuard} The student should write their own ideas. Only help with grammar and fluency, school matching, and interview strategy. User message: ${safePrompt}. Context: ${previousContext || 'No prior output yet.'}`;
+          ? 'This is not a high-school request, so do not write a school application or personal statement. If the request is school-related, follow the user exactly and stay high-school specific.'
+          : schoolRelated
+            ? 'This is a high-school-related request. Follow the user exactly, stay on topic, and keep the answer school-specific and age-appropriate.'
+            : 'Keep the response helpful and age-appropriate, and do not write a personal statement or application draft.';
+        const basePrompt = `You are the ${agent.label}. Keep content suitable for ages 1 to 13, friendly, encouraging, and strict. ${appDraftGuard} The student should write their own ideas only when the user asks for their own work. For high-school requests, respond exactly to the user’s instructions and stay tightly focused on the school topic. User message: ${safePrompt}. Context: ${previousContext || 'No prior output yet.'}`;
 
         const proxyReply = await callProxy(basePrompt);
         const schoolInfo = agentKey === 'school' ? await getSchoolListForPrompt(safePrompt) : null;
+
+        if (agentKey === 'interview') {
+          const question = proxyReply || 'Tell me about a time you overcame a challenge.';
+          return {
+            text: `Mock interview question: ${question}`,
+            voiceQuestion: question.replace(/^.*?question\s*:\s*/i, '').trim() || question
+          };
+        }
 
         if (agentKey === 'school') {
           const base = proxyReply || buildFallback(agent.label, safePrompt, previousContext);
@@ -988,8 +1079,14 @@
         return String(text).replace(/\s+/g, ' ').trim();
       }
 
+      function isSchoolRelatedPrompt(text) {
+        return /(school|high school|vancouver|academy|program|admission|student|teacher|clubs|sports|arts|science|math|music|drama|community)/i.test(String(text || ''));
+      }
+
       function looksLikeApplicationDraftRequest(text) {
         const lower = String(text || '').toLowerCase();
+        if (isSchoolRelatedPrompt(lower)) return false;
+
         const explicitDraftSignals = [
           'application essay',
           'personal statement',
@@ -1006,6 +1103,20 @@
         const hasApplicationSignal = explicitDraftSignals.some(signal => lower.includes(signal));
         const hasWritingSignal = /(write|draft|compose|create|help me write|help with writing)/.test(lower);
         return hasApplicationSignal && hasWritingSignal;
+      }
+
+      function applyTheme(themeName) {
+        document.body.setAttribute('data-theme', themeName);
+      }
+
+      function speakText(text) {
+        if (!text || !('speechSynthesis' in window)) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.05;
+        utterance.volume = 1;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
       }
 
       function chooseAgentsForPrompt(prompt) {
@@ -1085,7 +1196,7 @@
           previousOutput = typeof result === 'string' ? result : result.text;
 
           const message = document.createElement('div');
-          message.className = 'chat-message agent';
+          message.className = `chat-message agent ${item.key}`;
 
           const header = document.createElement('div');
           header.className = 'chat-header';
@@ -1097,6 +1208,10 @@
 
           message.appendChild(header);
           message.appendChild(body);
+
+          if (item.key === 'interview' && typeof result !== 'string' && result.voiceQuestion) {
+            speakText(result.voiceQuestion);
+          }
 
           if (item.key === 'school' && typeof result !== 'string' && result.schools) {
             const listWrapper = document.createElement('div');
@@ -1116,6 +1231,11 @@
         setTrace(trace);
       }
 
+      document.getElementById('themeSelect').addEventListener('change', (event) => {
+        applyTheme(event.target.value);
+      });
+
+      applyTheme('lavender');
       runAgentsBtn.addEventListener('click', orchestrateAgents);
       renderInitialCards();
     </script>
