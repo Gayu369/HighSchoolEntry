@@ -68,6 +68,67 @@
         --shadow: 0 18px 48px rgba(44, 141, 90, 0.12);
       }
 
+      body[data-theme="midnight"] {
+        --bg-1: #101827;
+        --bg-2: #171f2d;
+        --panel: rgba(17,24,39,0.78);
+        --panel-strong: #111827;
+        --ink: #edf4ff;
+        --muted: #b9c8de;
+        --border: rgba(124, 150, 255, 0.2);
+        --accent: #8b7dff;
+        --accent-2: #27d7c7;
+        --accent-3: #ffb15c;
+        --accent-4: #ff6fb0;
+        --shadow: 0 20px 50px rgba(15, 23, 42, 0.42);
+      }
+
+      body[data-theme="violet-night"] {
+        --bg-1: #160f2a;
+        --bg-2: #221638;
+        --panel: rgba(26,20,42,0.8);
+        --panel-strong: #1c1532;
+        --ink: #f7ebff;
+        --muted: #d9c7ef;
+        --border: rgba(185, 130, 255, 0.22);
+        --accent: #a56bff;
+        --accent-2: #56d6d1;
+        --accent-3: #ffab73;
+        --accent-4: #ff7bbf;
+        --shadow: 0 20px 52px rgba(38, 22, 62, 0.5);
+      }
+
+      body[data-theme="berry"] {
+        --bg-1: #1a1223;
+        --bg-2: #24172e;
+        --panel: rgba(38, 24, 42, 0.8);
+        --panel-strong: #2a1c34;
+        --ink: #f9edf9;
+        --muted: #d5bddb;
+        --border: rgba(255, 126, 175, 0.2);
+        --accent: #ff7ba7;
+        --accent-2: #ffb05c;
+        --accent-3: #8d7dff;
+        --accent-4: #5bd4c7;
+        --shadow: 0 20px 52px rgba(42, 22, 44, 0.45);
+      }
+
+      @keyframes floatIn {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 0 rgba(109,94,247,0.0); }
+        50% { box-shadow: 0 0 18px rgba(109,94,247,0.18); }
+      }
+
       * { box-sizing: border-box; }
 
       body {
@@ -145,6 +206,7 @@
         border-radius: 30px;
         box-shadow: var(--shadow);
         backdrop-filter: blur(14px);
+        animation: floatIn 0.45s ease-out;
       }
 
       .sidebar,
@@ -277,6 +339,7 @@
         cursor: pointer;
         font-weight: 800;
         box-shadow: 0 12px 24px rgba(100, 95, 247, 0.25);
+        animation: pulseGlow 2.5s ease-in-out infinite;
       }
 
       .results {
@@ -332,6 +395,7 @@
         border: 1px solid rgba(109,94,247,0.1);
         background: rgba(255,255,255,0.75);
         box-shadow: 0 8px 20px rgba(93, 101, 168, 0.08);
+        animation: floatIn 0.45s ease-out;
       }
 
       .chat-message.agent {
@@ -545,6 +609,9 @@
               <option value="sunset">Sunset</option>
               <option value="ocean">Ocean</option>
               <option value="forest">Forest</option>
+              <option value="midnight">Midnight</option>
+              <option value="violet-night">Violet Night</option>
+              <option value="berry">Berry</option>
             </select>
           </div>
         </aside>
